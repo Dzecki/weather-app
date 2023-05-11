@@ -1,42 +1,65 @@
-import './App.css';
-import Search from './Components/Search';
-import { useState } from 'react';
-import { WEATHER_API_URL, WEATHER_API_KEY } from "./Api";
-import CityWeather from './Components/CityWeather';
-import Forecast  from './Components/Forecast';
+import { useState, useEffect } from 'react';
 
 function App() {
-  const [currentWeather, setCurrentWeather] = useState(null);
-  const [forecast, setForecast] = useState(null);
+  const [apiData, setApiData] = useState({});
+  const [state, setState] = useState('London');
+  const [favoritePlaces, setFavoritePlaces] = useState([]); 
 
-  const handleOnSearchChange = (searchData) => {
-    const [lat, lon] = searchData.value.split(" ");
+  const apiKey = "fd5ee6ffa5e43c0d36df3b257141b3fa";
+  const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${state}&appid=${apiKey}`;
 
-  const currentWeatherFetch = fetch(
-    `${WEATHER_API_URL}/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
-  );
+  useEffect(() => {
+    fetch(apiUrl)
+      .then((res) => res.json())
+      .then((data) => setApiData(data));
+  }, [apiUrl]);
 
-  const forecastFetch = fetch(
-    `${WEATHER_API_URL}/forecast?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
-  );
+  const inputHandler = (event) => {
+    setState(event.target.value);
+  };
 
-  Promise.all([currentWeatherFetch, forecastFetch])
-  .then(async (response) => {
-    const weatherResponse = await response[0].json();
-    const forecastResponse = await response[1].json();
+  const kelvinToFarenheit = (k) => {
+    return (k - 273.15).toFixed(2);
+  }; 
 
-    setCurrentWeather({ city: searchData.label, ...weatherResponse });
-    setForecast({ city: searchData.label, ...forecastResponse });
-  })
-  .catch((err) => console.log(err));
-
-};
+  const addFavPlace = () => {
+    setFavoritePlaces(...favoritePlaces, state);
+  }
 
   return (
-      <div className="container">
-        <Search onSearchChange={handleOnSearchChange} />
-        {currentWeather && <CityWeather data={currentWeather} />}
-        {forecast && <Forecast data = {forecast}/>} 
+    <div className="bg-gray-900 h-[100vh]">
+      <div className="flex justify-center">
+          <input className='m-4 p-2 h-[48px] w-[50%] rounded-lg' onChange={inputHandler} value={state}/>
+      </div>
+
+        <div className='flex justify-center'>
+          {apiData.main ? (
+            <div className='relative text-white flex flex-col align-center bg-gray-800 border rounded-[2px] mt-12 border-white'>
+              <img src={`http://openweathermap.org/img/wn/${apiData.weather[0].icon}@4x.png`} className='h-[300px] border-b border-gray-600'/>
+
+              <div className='flex justify-around'>
+                <p className="m-3 text-2xl font-bold">
+                  <strong>{apiData.name}</strong>
+                </p>
+
+                <p className="font-bold m-3 text-2xl">
+                  {kelvinToFarenheit(apiData.main.temp)}&deg; C
+                </p>
+              </div>
+
+              <p className='absolute right-2 top-1'>
+                <strong>{apiData.weather[0].main}</strong>
+              </p>
+
+              <button className='absolute left-2 top-1 bg-gray-700 w-6' onClick={addFavPlace}>/</button>
+            </div>
+          ) : (
+            <div>
+              <h1 className='text-white'>Enter city</h1>
+              <h1 className='text-center text-white text-2xl tracking-[5px] transition-all'>...</h1>
+            </div>
+          )}
+        </div>
     </div>
   );
 }
