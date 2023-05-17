@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react';
+import Chart from "chart.js/auto";
+import { CategoryScale } from 'chart.js/auto';
+import ForecastChart from './Components/ForecastChart';
+
+Chart.register(CategoryScale);
 
 function App() {
   const [apiData, setApiData] = useState({});
@@ -17,30 +22,31 @@ function App() {
 
   const inputHandler = (event) => {
     setState(event.target.value);
-    checkIfFav();
+    if(!favoritePlaces.filter((place) => place === event.target.value).length > 0) {
+      setIsFav("white");
+    }
+    else {
+      setIsFav("orange");
+    }
   };
 
-  const kelvinToFarenheit = (k) => {
+  const ToCelsius = (k) => {
     return (k - 273.15).toFixed(2);
   }; 
 
   const addFavPlace = () => {
-    setFavoritePlaces([...favoritePlaces, state]);
-    setIsFav(isfav === "white" ? "orange" : "white");
+    if(!(favoritePlaces.filter((place) => place === state ).length > 0)) {
+      setFavoritePlaces([...favoritePlaces, state]);
+      setIsFav("orange");
+    }
+    else {
+      console.log("Already added");
+    }
   }
 
   const showFavPlace = (e) => {
     setState(e.target.value);
-    checkIfFav();
-  }
-
-  const checkIfFav = () => {
-    if(!favoritePlaces.map((place) => place === state)) {
-      setIsFav("white");
-    }
-    else {
-      setIsFav("orange"); 
-    }
+    setIsFav("orange");
   }
 
   const favList = favoritePlaces.map((place) => <button value={place} onClick={showFavPlace} className='h-[60px] font-semibold w-[120px] text-center p-4 m-2 
@@ -49,7 +55,7 @@ function App() {
   return (
     <div className="bg-gray-900 h-[100vh]">
       <div className="flex items-center justify-center">
-          <div className='absolute top-4 p-2 left-8 border border-l-amber-400 border-b-amber-400 border-white h-[96%] w-[150px]'>
+          <div className='absolute top-4 p-2 left-8 border border-l-amber-400 border-b-amber-400 border-white h-[96%] rounded-sm w-[150px]'>
             <div className='flex justify-center'>
               <h1 className='text-amber-400 mb-2 font-bold text-center'>Favorite</h1>
               <h1 className='text-white font-bold text-center'>places</h1>
@@ -62,29 +68,54 @@ function App() {
 
         <div className='flex justify-center'>
           {apiData.main ? (
-            <div className='relative text-white flex flex-col align-center border rounded-[2px] mt-12 border-white'>
-              <img src={`http://openweathermap.org/img/wn/${apiData.weather[0].icon}@4x.png`} className='h-[300px] border-b border-gray-600'/>
+            <div className='flex items-center justify-center'>
+              <div className='relative text-white flex flex-col align-center border rounded-[2px] mt-12 border-white'>
+                <img src={`http://openweathermap.org/img/wn/${apiData.weather[0].icon}@4x.png`} className='h-[300px] border-b border-gray-600'/>
 
-              <div className='flex justify-around'>
-                <p className="m-3 text-2xl font-bold">
-                  <strong>{apiData.name}</strong>
+                <div className='flex justify-around'>
+                  <p className="m-3 text-2xl font-bold">
+                    <strong>{apiData.name}</strong>
+                  </p>
+
+                  <p className="font-bold m-3 text-2xl">
+                    {ToCelsius(apiData.main.temp)}&deg; C
+                  </p>
+                </div>
+
+                <p className='absolute right-3 top-2'>
+                  <strong>{apiData.weather[0].main}</strong>
                 </p>
 
-                <p className="font-bold m-3 text-2xl">
-                  {kelvinToFarenheit(apiData.main.temp)}&deg; C
+                <p className='absolute right-3 top-9'>
+                  <strong>{apiData.main.pressure} hPa</strong>
                 </p>
+
+                <button className='absolute left-3 top-3 border border-amber-500 bg-white h-[15px] w-[15px] rotate-[45deg]' style={{backgroundColor: isfav}} onClick={addFavPlace}></button>
               </div>
 
-              <p className='absolute right-3 top-2'>
-                <strong>{apiData.weather[0].main}</strong>
-              </p>
-
-              <button className='absolute left-3 top-3 border border-amber-500 bg-white h-[15px] w-[15px] rotate-[45deg]' style={{backgroundColor: isfav}} onClick={addFavPlace}></button>
+              <ForecastChart chartData={{
+                  labels: ['18-05', '19-05', '20-05', '21-05'],
+                  datasets: [
+                      {
+                        label: 'Temperature',
+                        data: [ToCelsius(apiData.main.temp), 20, 10, 15],
+                        backgroundColor: [
+                          'rgba(125, 255, 255, 0.9)',
+                          'rgba(255, 155, 255, 0.9)',
+                          'rgba(255, 255, 155, 0.9)',
+                          'rgba(155, 155, 255, 0.9)'
+                        ],
+                        borderWidth: 0,
+                      }
+                    ]
+                }}/>
             </div>
+            
           ) : (
             <div>
               <h1 className='text-center text-white text-2xl tracking-[5px] transition-all'>...</h1>
             </div>
+            
           )}
         </div>
     </div>
