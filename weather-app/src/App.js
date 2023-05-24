@@ -7,12 +7,18 @@ Chart.register(CategoryScale);
 
 function App() {
   const [apiData, setApiData] = useState({});
-  const [state, setState] = useState('');
+  const [forecastData, setForecastData] = useState({});
   const [favoritePlaces, setFavoritePlaces] = useState([]); 
   const [isfav, setIsFav] = useState("white");
+  
+  const forecastMap = [];
 
+  const [state, setState] = useState('Warsaw');
   const apiKey = "fd5ee6ffa5e43c0d36df3b257141b3fa";
+  
   const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${state}&appid=${apiKey}`;
+  const apiForecast = `https://api.openweathermap.org/data/2.5/forecast?q=${state}&appid=${apiKey}`;
+
 
   useEffect(() => {
     fetch(apiUrl)
@@ -20,14 +26,22 @@ function App() {
       .then((data) => setApiData(data));
   }, [apiUrl]);
 
+  useEffect(() => {
+    fetch(apiForecast)
+    .then((res) => res.json())
+    .then((data) => setForecastData(data));
+  }, [apiForecast]);
+
   const inputHandler = (event) => {
     setState(event.target.value);
+
     if(!favoritePlaces.filter((place) => place === event.target.value).length > 0) {
       setIsFav("white");
     }
     else {
       setIsFav("orange");
     }
+
   };
 
   const ToCelsius = (k) => {
@@ -67,7 +81,7 @@ function App() {
       </div>
 
         <div className='flex justify-center'>
-          {apiData.main ? (
+          {forecastData.list && apiData.main ? (
             <div className='flex items-center justify-center'>
               <div className='relative text-white flex flex-col align-center border rounded-[2px] mt-12 border-white'>
                 <img src={`http://openweathermap.org/img/wn/${apiData.weather[0].icon}@4x.png`} className='h-[300px] border-b border-gray-600'/>
@@ -92,23 +106,24 @@ function App() {
 
                 <button className='absolute left-3 top-3 border border-amber-500 bg-white h-[15px] w-[15px] rotate-[45deg]' style={{backgroundColor: isfav}} onClick={addFavPlace}></button>
               </div>
-
-              <ForecastChart chartData={{
-                  labels: ['18-05', '19-05', '20-05', '21-05'],
-                  datasets: [
-                      {
-                        label: 'Temperature',
-                        data: [ToCelsius(apiData.main.temp), 20, 10, 15],
-                        backgroundColor: [
-                          'rgba(125, 255, 255, 0.9)',
-                          'rgba(255, 155, 255, 0.9)',
-                          'rgba(255, 255, 155, 0.9)',
-                          'rgba(155, 155, 255, 0.9)'
-                        ],
-                        borderWidth: 0,
-                      }
-                    ]
-                }}/>
+           
+              
+                <ForecastChart chartData={{
+                    labels: [(forecastData.list[12].dt_txt).substring(0, 10), (forecastData.list[20].dt_txt).substring(0, 10), (forecastData.list[28].dt_txt).substring(0, 10), (forecastData.list[36].dt_txt).substring(0, 10)],
+                    datasets: [
+                        {
+                          label: 'Temperature',
+                          data: [ToCelsius(forecastData.list[12].main.temp) , ToCelsius(forecastData.list[20].main.temp), ToCelsius(forecastData.list[28].main.temp), ToCelsius(forecastData.list[36].main.temp)],
+                          backgroundColor: [
+                            'rgba(185, 155, 255, 0.9)',
+                            'rgba(155, 255, 255, 0.9)',
+                            'rgba(255, 185, 155, 0.9)',
+                            'rgba(105, 155, 255, 0.9)'
+                          ],
+                          borderWidth: 0,
+                        }
+                      ]
+                  }}/>
             </div>
             
           ) : (
