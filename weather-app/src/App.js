@@ -10,8 +10,7 @@ function App() {
   const [forecastData, setForecastData] = useState({});
   const [favoritePlaces, setFavoritePlaces] = useState([]); 
   const [isfav, setIsFav] = useState("white");
-  
-  const forecastMap = [];
+  const [tempType, setTempType] = useState(true);
 
   const [state, setState] = useState('Warsaw');
   const apiKey = "fd5ee6ffa5e43c0d36df3b257141b3fa";
@@ -46,6 +45,10 @@ function App() {
 
   const ToCelsius = (k) => {
     return (k - 273.15).toFixed(2);
+  }; 
+
+  const ToFahrenheit = (k) => {
+    return ((k - 273.15) * 9/5 + 32).toFixed(2);
   }; 
 
   const addFavPlace = () => {
@@ -91,9 +94,9 @@ function App() {
                     <strong>{apiData.name}</strong>
                   </p>
 
-                  <p className="font-bold m-3 text-2xl">
-                    {ToCelsius(apiData.main.temp)}&deg; C
-                  </p>
+                  <button className="font-bold m-3 text-2xl cursor-pointer" onClick={() => setTempType(tempType ? false : true)}>
+                    {tempType ? ToCelsius(apiData.main.temp) + `° C` : ToFahrenheit(apiData.main.temp) + `° F`}
+                  </button>
                 </div>
 
                 <p className='absolute right-3 top-2'>
